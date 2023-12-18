@@ -5,6 +5,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch
+import matplotlib.pyplot as plt
+from torchvision import transforms
+from PIL import Image
 
 class CNN(nn.Module):
     
@@ -90,7 +93,59 @@ def test():
     test_loss /= len(loaders['test'].dataset)
     print(f'\nTest set: Average loss: {test_loss:.4f}, Accuracy {correct}/{len(loaders["test"].dataset)} ({100. * correct / len(loaders["test"].dataset):.0f}%\n')
 
-for epoch in range (1,11):
+def predict(c):
+    model.eval()
+
+    data, target = test_data[c]
+
+    data = data.unsqueeze(0).to(device)
+
+    output = model(data)
+
+    prediction = output.argmax(dim = 1, keepdim = True).item()
+
+    print(f'Prediction {prediction}')
+
+    image = data.squeeze(0).squeeze(0).cpu().numpy()
+
+    plt.imshow(image, cmap="gray")
+    plt.show()
+
+for epoch in range (1,6):
     train(epoch)
     test()
     
+for i in range (1,11):
+    predict(i)
+
+def preprocess_image(image_path):
+    image = Image.open(image_path).convert("L")  # Convert to grayscale
+    image = image.resize((28, 28))  # Resize to match MNIST image size
+    transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,)),  # Normalize like MNIST images
+        ]
+    )
+    return transform(image)
+
+
+def predict(image_paths):
+    model.eval()
+    for image_path in image_paths:
+        image_tensor = preprocess_image(image_path)
+        image_tensor = image_tensor.unsqueeze(0).to(device)  # Add batch dimension
+        output = model(image_tensor)
+        prediction = output.argmax(dim=1, keepdim=True).item()
+        print(f"Prediction for {image_path}: {prediction}")
+        image = image_tensor.squeeze(0).squeeze(0).cpu().numpy()
+        plt.imshow(image, cmap="gray")
+        plt.show()
+
+
+for epoch in range(1, 3):
+    train(epoch)
+    test()
+
+image_paths = ["image7.png", "image3.png"]
+predict(image_paths)
