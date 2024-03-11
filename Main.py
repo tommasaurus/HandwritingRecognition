@@ -142,6 +142,22 @@ def predict(image_paths):
         plt.imshow(image, cmap="gray")
         plt.show()
 
+def predict_single_image(image_path):    
+    model.eval()
+        
+    image_tensor = preprocess_image(image_path)
+        
+    output = model(image_tensor)
+        
+    prediction = output.argmax(dim=1, keepdim=True).item()
+        
+    print(f"Prediction for '{image_path}': {prediction}")
+    
+    image = image_tensor.squeeze(0).squeeze(0).cpu().numpy()
+    plt.imshow(image, cmap="gray")
+    plt.show()
+    
+    return prediction
 
 for epoch in range(1, 3):
     train(epoch)
